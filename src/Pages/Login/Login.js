@@ -4,28 +4,44 @@ import auth from '../../firebase/firebase.init'
 import { useSignInWithGoogle } from 'react-firebase-hooks/auth';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
-import Loading from '../Shared/Loading/Loading';
+
 
 const Login = () => {
-    const [signInWithGoogle, user, loading, error] = useSignInWithGoogle(auth);
+
 
     let navigate = useNavigate();
     let location = useLocation();
     let from = location.state?.from?.pathname || "/";
 
-    if (error) {
-    }
-    if (loading) {
-        return <Loading></Loading>
-    }
-    if (user) {
-        console.log(user);
-        navigate(from, { replace: true });
-    }
-
+    const [signInWithGoogle, user, loading, error] = useSignInWithGoogle(auth);
     const handleSignInWithGoogle = () => {
         signInWithGoogle()
     }
+
+    if (user) {
+        // console.log(user.user);
+        // console.log({ email: user.user.email });
+        const URL = 'http://localhost:5000/login';
+        fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                email: user.user.email
+            }),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                // navigates to which protected route user wanted to go
+                navigate(from, { replace: true });
+                localStorage.setItem('accessToken', data.token)
+                console.log(data.token)
+            });
+
+    }
+
+
 
     const handleSignOut = () => {
         signOut(auth)
